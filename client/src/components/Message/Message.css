@@ -1,0 +1,23 @@
+.own-message {
+    background-color: aquamarine;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    color: black;
+    font-size: 25px;
+    margin-top: 20px;
+    outline: 4px solid black;
+    width: 80vw;
+}
+
+.other-message {
+    background-color: coral;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    color: black;
+    font-size: 25px;
+    margin-top: 20px;
+    outline: 4px solid black;
+    width: 80vw;
+}

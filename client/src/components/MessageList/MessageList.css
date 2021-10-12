@@ -1,0 +1,13 @@
+.message-box {
+    padding: 10px;
+    border-radius: 10px;
+    background-color: white;
+    text-align: center;
+    color: black;
+    font-size: 25px;
+    margin-top: 20px;
+    outline: 4px solid black;
+    width: 90vw;
+    max-height: 45vh;
+    overflow-y: scroll;
+}

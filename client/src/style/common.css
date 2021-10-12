@@ -1,0 +1,24 @@
+.top-rectangle {
+    padding: 10px;
+    border-radius: 40px;
+    background-color: blue;
+    text-align: center;
+    color: white;
+    font-size: 35px;
+    margin-top: 20px;
+}
+
+.button-holder {
+    margin-top: 20px;
+    margin-bottom: 20px
+}
+
+.menu-element {
+    background-color: crimson;
+    padding: 10px;
+    border-radius: 20px;
+    width: 90%;
+    text-align: center;
+    color: black;
+    font-size: 25px;
+}

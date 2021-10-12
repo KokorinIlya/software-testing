@@ -1,0 +1,1 @@
+npx playwright test e2e/App.spec.js
