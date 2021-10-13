@@ -105,6 +105,10 @@ function finishChat(serverState, chatId, userId) {
         return [result, 400]
     }
     maybeChat.finished = true
+    if (chatId === serverState.pendingRequestId) {
+        assert(maybeChat.userBId === null)
+        serverState.pendingRequestId = null
+    }
     const result = {
         status: 'OK'
     }

@@ -56,14 +56,15 @@ async function closeChat(page) {
 }
 
 test.describe('Chat', () => {
-    const browsers = []
-    const pages = []
+    let browsers
+    let pages
 
     test.beforeEach(async () => {
+        browsers = []
+        pages = []
         for (const port of [3000, 4000]) {
             const browser = await playwright.chromium.launch()
-            const context = await browser.newContext()
-            const page = await context.newPage()
+            const page = await browser.newPage()
             await page.goto(`http://localhost:${port}/`)
             pages.push(page)
             browsers.push(browser)
@@ -71,9 +72,192 @@ test.describe('Chat', () => {
     })
 
     test.afterEach(async () => {
-        for (let i = 0; i < 2; i += 1) {
-            await browsers[i].close()
+        for (const browser of browsers) {
+            await browser.close()
         }
+    })
+
+    test('chat is updated on send message', async () => {
+        await startChat(pages[0], true)
+        await startChat(pages[1], false)
+        await reload(pages[0])
+        await sendMessage(pages[0], 'Hello!')
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await sendMessage(pages[1], 'World!')
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [
+                    'Собеседник: Hello!',
+                    'Я: World!'
+                ],
+                chatStatus: 'Активный чат'
+            }
+        )
+    })
+
+    test('chat is updated on reload', async () => {
+        await startChat(pages[0], true)
+        await startChat(pages[1], false)
+        await reload(pages[0])
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await sendMessage(pages[0], 'Hello!')
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [
+                    'Я: Hello!'
+                ],
+                chatStatus: 'Активный чат'
+            }
+        )
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await reload(pages[1])
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [
+                    'Собеседник: Hello!'
+                ],
+                chatStatus: 'Активный чат'
+            }
+        )
+    })
+
+    test('chat is updated on finish', async () => {
+        await startChat(pages[0], true)
+        await startChat(pages[1], false)
+        await reload(pages[0])
+        await sendMessage(pages[0], 'Hello!')
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await closeChat(pages[1])
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [
+                    'Собеседник: Hello!'
+                ],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+    })
+
+    test('chat is finished on reload', async () => {
+        await startChat(pages[0], true)
+        await startChat(pages[1], false)
+        await reload(pages[0])
+        await closeChat(pages[1])
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await reload(pages[0])
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+    })
+
+    test('chat is finished on chat finish', async () => {
+        await startChat(pages[0], true)
+        await startChat(pages[1], false)
+        await reload(pages[0])
+        await closeChat(pages[1])
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await closeChat(pages[0])
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+    })
+
+    test('chat is finished on send message', async () => {
+        await startChat(pages[0], true)
+        await startChat(pages[1], false)
+        await reload(pages[0])
+        await closeChat(pages[1])
+        expect(await getMessages(pages[1])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Активный чат'
+            }
+        )
+        await sendMessage(pages[0], 'Message')
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+    })
+
+    test('users can return to application from finished chats', async () => {
+        await startChat(pages[0], true)
+        await closeChat(pages[0])
+        expect(await getMessages(pages[0])).toEqual(
+            {
+                messages: [],
+                chatStatus: 'Завершённый чат'
+            }
+        )
+        const buttons = await pages[0].$$('.menu-element')
+        expect(buttons.length).toBe(1)
+        expect(await buttons[0].textContent()).toEqual('Вернуться в приложение')
+        await buttons[0].click()
+        await delay(100)
+        const title = await pages[0].$$('.top-rectangle')
+        expect(await title[0].textContent()).toEqual('Очередное приложение с чатами')
     })
 
     test('users can exchange messages', async () => {

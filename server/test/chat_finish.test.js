@@ -229,4 +229,31 @@ describe('users can finish chats', () => {
             }
         )
     })
+
+    test('users are not connected to finished chat with one participant', () => {
+        const [connectResult] = chatManager.connect(serverState)
+        const chatId = connectResult.newChatId
+        const aId = connectResult.userId
+        expect(serverState.pendingRequestId).toEqual(chatId)
+
+        const [response, code] = chatManager.finishChat(serverState, chatId, aId)
+        expect(serverState.chats[chatId]).toEqual(
+            {
+                userAId: aId,
+                userBId: null,
+                messages: [],
+                finished: true
+            }
+        )
+        expect(code).toBe(200)
+        expect(response).toEqual(
+            {
+                status: 'OK'
+            }
+        )
+        expect(serverState.pendingRequestId).toBeNull()
+        const [newConnectRes] = chatManager.connect(serverState)
+        const newChatId = newConnectRes.newChatId
+        expect(newChatId).not.toEqual(chatId)
+    })
 })
