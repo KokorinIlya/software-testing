@@ -13,26 +13,15 @@ describe('BothParticipantsChat', () => {
                     {authorId: "uid_43", text: "Hello, one more time"},
                 ]
             }
-            onSendMessage={jest.fn()} onChatClose={jest.fn()} userId={"uid_42"}
-        />);
-        [
+            onSendMessage={jest.fn()} userId={"uid_42"}
+        />)
+        const texts = [
             "Я: Hello, world!", "Собеседник: Hello, 42!",
             "Собеседник: Hello, one more time"
-        ].forEach((text) => {
-            const linkElement = screen.getByText(text);
-            expect(linkElement).toBeInTheDocument();
-        })
-    });
-
-    test('performs chat closing on button click', () => {
-        const onClickMock = jest.fn()
-        const testRender = TestRenderer.create(<BothParticipantsChat
-            messages={[]} onSendMessage={jest.fn()} onChatClose={onClickMock} userId={"uid_42"}
-        />);
-        const button = testRender.root.children[2].children[0]
-        // noinspection JSUnresolvedFunction
-        button.props.onClick()
-        expect(button.children).toEqual(['Завершить чат'])
-        expect(onClickMock.mock.calls.length).toBe(1)
-    });
+        ]
+        for (const text of texts) {
+            const linkElement = screen.getByText(text)
+            expect(linkElement).toBeInTheDocument()
+        }
+    })
 })

@@ -5,13 +5,12 @@ import BothParticipantsChat from "../BothParticipantsChat/BothParticipantsChat";
 
 function ActiveChat({userId, messages, onSendMessage, onChatClose, onReloadButton}) {
     let chatBox
-    if (messages === null) { // TODO: common code for onChatClose
-        chatBox = <SingleParticipantChat onChatClose={onChatClose}/>
+    if (messages === null) {
+        chatBox = <SingleParticipantChat/>
     } else {
         chatBox = <BothParticipantsChat
             messages={messages}
             onSendMessage={onSendMessage}
-            onChatClose={onChatClose}
             userId={userId}
         />
     }
@@ -23,6 +22,9 @@ function ActiveChat({userId, messages, onSendMessage, onChatClose, onReloadButto
             </div>
             <div align="center">
                 {chatBox}
+                <div className="button-holder">
+                    <button className="menu-element" onClick={onChatClose}>Завершить чат</button>
+                </div>
                 <div className="button-holder">
                     <button className="menu-element" onClick={onReloadButton}>
                         Обновить страницу
