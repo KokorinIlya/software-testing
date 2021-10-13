@@ -5,7 +5,7 @@ import BothParticipantsChat from "../BothParticipantsChat/BothParticipantsChat";
 
 function ActiveChat({userId, messages, onSendMessage, onChatClose, onReloadButton}) {
     let chatBox
-    if (messages === null) {
+    if (messages === null) { // TODO: common code for onChatClose
         chatBox = <SingleParticipantChat onChatClose={onChatClose}/>
     } else {
         chatBox = <BothParticipantsChat

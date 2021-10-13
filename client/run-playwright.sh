@@ -1,1 +1,1 @@
-npx playwright test e2e/.*spec\.js
+npx playwright test e2e/.*spec\.js --workers=1

@@ -13,7 +13,7 @@ function Message({messageText, authorId, userId}) {
         authorName = "Собеседник"
     }
     return (
-        <div className={className}>
+        <div className={`message ${className}`}>
             {`${authorName}: ${messageText}`}
         </div>
     );
