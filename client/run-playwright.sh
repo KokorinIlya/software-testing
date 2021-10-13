@@ -1,1 +1,1 @@
-npx playwright test e2e/App.spec.js
+npx playwright test e2e/.*spec\.js

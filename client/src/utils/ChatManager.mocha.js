@@ -3,8 +3,17 @@ import chai from 'chai'
 import ChatManager from "./ChatManager.js";
 import sinon from 'sinon'
 
+function delay(time) {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(2);
+        }, time);
+    });
+}
+
 describe('ChatManager.getChatData', () => {
     it('returns chat with single participant', async () => {
+        await delay(200)
         const chatClient = {
             getChatData: sinon.fake.returns({
                 userAId: "uid_42",
