@@ -14,9 +14,19 @@ export default class ChatClient {
 
     async sendMessage(chatId, userId, messageText) {
         const result = await fetch(
-            `${this.baseString}/send/${chatId}?userId=${userId}&message=${messageText}`,
+            `${this.baseString}/send/${chatId}`,
             {
-                cache: "no-cache"
+                cache: "no-cache",
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        userId: userId,
+                        message: messageText
+                    }
+                )
             }
         )
         await result.json();
@@ -24,9 +34,18 @@ export default class ChatClient {
 
     async closeChat(chatId, userId) {
         const result = await fetch(
-            `${this.baseString}/close/${chatId}?userId=${userId}`,
+            `${this.baseString}/close/${chatId}`,
             {
-                cache: "no-cache"
+                cache: "no-cache",
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        userId: userId
+                    }
+                )
             }
         )
         await result.json();
@@ -45,9 +64,19 @@ export default class ChatClient {
 
     async submitCredentials(login, password, submitType) {
         const result = await fetch(
-            `${this.baseString}/${submitType}?login=${login}&password=${password}`,
+            `${this.baseString}/${submitType}`,
             {
-                cache: "no-cache"
+                cache: "no-cache",
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        login: login,
+                        password: password
+                    }
+                )
             }
         )
         return result.status;
