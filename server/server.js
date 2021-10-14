@@ -9,7 +9,7 @@ function serverMain(port) {
 
     const serverState = chatManager.createServerState()
 
-    app.get("/connect", function (req, res) {
+    app.post("/connect", function (req, res) {
         const [response, code] = chatManager.connect(serverState)
         res.status(code)
         res.contentType("application/json")

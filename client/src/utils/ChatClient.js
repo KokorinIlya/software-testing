@@ -36,7 +36,8 @@ export default class ChatClient {
         const result = await fetch(
             `${this.baseString}/connect`,
             {
-                cache: "no-cache"
+                cache: "no-cache",
+                method: 'POST'
             }
         )
         return await result.json()
