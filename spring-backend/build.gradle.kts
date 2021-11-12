@@ -18,6 +18,7 @@ repositories {
 val coroutinesVersion = "1.5.2"
 
 dependencies {
+    implementation("com.github.jasync-sql:jasync-postgresql:2.0.0")
     //implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -27,6 +28,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${coroutinesVersion}")
     //runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("com.typesafe:config:1.0.2")
 }
 
 tasks.withType<KotlinCompile> {

@@ -21,7 +21,7 @@ class UserController(@Autowired private val userService: UserService) {
             produces = ["application/json"]
     )
     suspend fun register(@RequestBody credentials: Credentials): ResponseEntity<String> {
-        delay(1000)
+        delay(500)
         return if (userService.register(credentials)) {
             ResponseEntity.status(HttpStatus.OK).body("OK")
         } else {
