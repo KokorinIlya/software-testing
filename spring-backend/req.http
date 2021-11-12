@@ -1,0 +1,14 @@
+POST http://localhost:8080/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "login": "login",
+  "password": "bbb"
+}
+
+###
+GET http://localhost:8080/hello/myname
+Accept: text/plain
+
+###
