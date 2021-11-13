@@ -14,7 +14,7 @@ Accept: application/json
 
 {
   "login": "kek",
-  "password": "aaa"
+  "password": "zzz"
 }
 
 ###
