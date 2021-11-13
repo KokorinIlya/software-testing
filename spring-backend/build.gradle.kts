@@ -29,6 +29,7 @@ dependencies {
     //runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("com.typesafe:config:1.0.2")
+    testImplementation("org.mockito:mockito-core:3.+")
 }
 
 tasks.withType<KotlinCompile> {
