@@ -104,7 +104,7 @@ SELECT crypt(?, (SELECT encrypted_pass FROM MatchingUser)) =
         verify(mockedResultSet, times(1)).size
         verify(mockedResultSet, times(1))[0]
         verify(mockedRow, times(1)).getBoolean("login_result")
-        verifyNoMoreInteractions(mockedConnectionProvider, mockedConnection, mockedResultSet)
+        verifyNoMoreInteractions(mockedConnectionProvider, mockedConnection, mockedResultSet, mockedRow)
     }
 
     @Test

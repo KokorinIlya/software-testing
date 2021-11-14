@@ -7,6 +7,7 @@ import com.github.kokorinilya.springbackend.exception.CreateNewChatException
 import com.github.kokorinilya.springbackend.model.ChatConnection
 import com.github.kokorinilya.springbackend.model.ExistingChatConnection
 import com.github.kokorinilya.springbackend.model.NewChatConnection
+import com.github.kokorinilya.springbackend.utils.UUIDGenerator
 import org.springframework.stereotype.Component
 import java.util.*
 
@@ -17,7 +18,8 @@ interface ChatRepo {
 @Component
 class ChatRepoImpl(
         private val connectionProvider: ConnectionProvider,
-        private val config: ChatRepoConfig
+        private val config: ChatRepoConfig,
+        private val uuidGenerator: UUIDGenerator
 ) : ChatRepo {
     companion object {
         private val connectToExistingChatQuery = """
@@ -44,7 +46,7 @@ VALUES (?::UUID, ?::UUID);
             uid: String, connection: SuspendingConnection
     ): NewChatConnection {
         for (i in 1..config.maxRetries) {
-            val chatId = UUID.randomUUID().toString()
+            val chatId = uuidGenerator.genUUID()
             val result = connection.sendPreparedStatement(createNewChatQuery, listOf(chatId, uid))
             assert(result.rowsAffected in 0..1)
             if (result.rowsAffected == 1L) {
@@ -58,7 +60,7 @@ VALUES (?::UUID, ?::UUID);
 
     override suspend fun connect(): ChatConnection {
         val connection = connectionProvider.getConnection()
-        val uid = UUID.randomUUID().toString()
+        val uid = uuidGenerator.genUUID()
         val result = connection.sendPreparedStatement(connectToExistingChatQuery, listOf(uid))
         val rows = result.rows
         assert(rows.size in 0..1)
