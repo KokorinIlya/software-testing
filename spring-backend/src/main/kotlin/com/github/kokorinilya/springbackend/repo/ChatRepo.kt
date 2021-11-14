@@ -42,9 +42,7 @@ VALUES (?::UUID, ?::UUID);
         """.trimIndent()
     }
 
-    private suspend fun createNewChat(
-            uid: String, connection: SuspendingConnection
-    ): NewChatConnection {
+    private suspend fun createNewChat(uid: String, connection: SuspendingConnection): NewChatConnection {
         for (i in 1..config.maxRetries) {
             val chatId = uuidGenerator.genUUID()
             val result = connection.sendPreparedStatement(createNewChatQuery, listOf(chatId, uid))
