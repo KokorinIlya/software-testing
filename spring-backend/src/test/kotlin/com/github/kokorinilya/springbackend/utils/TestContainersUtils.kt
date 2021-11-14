@@ -49,25 +49,34 @@ suspend fun getPostgresContainer(initScriptPath: Path): Pair<PostgreSQLContainer
     }
     container.start()
 
-    val conn = PostgreSQLConnectionBuilder.createConnectionPool {
-        host = container.host
-        port = container.getMappedPort(5432)
-        database = "mock_db"
-        username = "user"
-        password = "password"
-        maxActiveConnections = 32
-    }.asSuspending
+    try {
+        val conn = PostgreSQLConnectionBuilder.createConnectionPool {
+            host = container.host
+            port = container.getMappedPort(5432)
+            database = "mock_db"
+            username = "user"
+            password = "password"
+            maxActiveConnections = 32
+        }.asSuspending
 
-    @Suppress("BlockingMethodInNonBlockingContext")
-    Files.newBufferedReader(initScriptPath).use {
-        val lines = it.readLines().joinToString(separator = "\n")
-        val commands = lines.split("--- CMD")
-        conn.inTransaction { transactionConn ->
-            for (curCommand in commands) {
-                transactionConn.sendQuery(curCommand)
+        @Suppress("BlockingMethodInNonBlockingContext")
+        Files.newBufferedReader(initScriptPath).use {
+            val lines = it.readLines().joinToString(separator = "\n")
+            val commands = lines.split("--- CMD")
+            conn.inTransaction { transactionConn ->
+                for (curCommand in commands) {
+                    transactionConn.sendQuery(curCommand)
+                }
             }
         }
-    }
 
-    return Pair(container, conn)
+        return Pair(container, conn)
+    } catch (e: Throwable) {
+        try {
+            container.stop()
+        } catch (closeE: Throwable) {
+            e.addSuppressed(closeE)
+        }
+        throw e
+    }
 }
