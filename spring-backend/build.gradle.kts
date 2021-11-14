@@ -30,6 +30,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("com.typesafe:config:1.0.2")
     testImplementation("org.mockito:mockito-core:3.+")
+    testImplementation("org.testcontainers:testcontainers:1.16.2")
+    testImplementation("org.testcontainers:postgresql:1.16.2")
+
 }
 
 tasks.withType<KotlinCompile> {

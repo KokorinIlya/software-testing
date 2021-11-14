@@ -69,7 +69,7 @@ SELECT crypt(?, (SELECT encrypted_pass FROM MatchingUser)) =
         testRegisterNewUser(successful = false)
     }
 
-    private fun testLoginNoSuchUser(dbResponse: Boolean?, expectedResult: Boolean) = runBlocking {
+    private fun testLogin(dbResponse: Boolean?, expectedResult: Boolean) = runBlocking {
         val mockedConnectionProvider = mock(ConnectionProvider::class.java)
         val mockedConnection = mock(SuspendingConnection::class.java)
         val mockedResultSet = mock(ResultSet::class.java)
@@ -95,7 +95,7 @@ SELECT crypt(?, (SELECT encrypted_pass FROM MatchingUser)) =
 
         val repo = UserRepoImpl(connectionProvider = mockedConnectionProvider)
         val loginResult = repo.login(Credentials(login = login, password = password))
-        assertEquals(ectedResult, loginResult)
+        assertEquals(expectedResult, loginResult)
 
         verify(mockedConnectionProvider, times(1))
                 .getConnection()
@@ -105,5 +105,20 @@ SELECT crypt(?, (SELECT encrypted_pass FROM MatchingUser)) =
         verify(mockedResultSet, times(1))[0]
         verify(mockedRow, times(1)).getBoolean("login_result")
         verifyNoMoreInteractions(mockedConnectionProvider, mockedConnection, mockedResultSet)
+    }
+
+    @Test
+    fun testLoginNoSuchUser() {
+        testLogin(dbResponse = null, expectedResult = false)
+    }
+
+    @Test
+    fun testLoginWrongPassword() {
+        testLogin(dbResponse = false, expectedResult = false)
+    }
+
+    @Test
+    fun testLoginSuccessful() {
+        testLogin(dbResponse = true, expectedResult = true)
     }
 }
