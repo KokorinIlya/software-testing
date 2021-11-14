@@ -6,11 +6,17 @@ import org.springframework.stereotype.Component
 
 interface ChatService {
     suspend fun connect(): ChatConnection
+
+    suspend fun sendMessage(chatId: String, authorId: String, messageText: String)
 }
 
 @Component
 class ChatServiceImpl(private val chatRepo: ChatRepo) : ChatService {
     override suspend fun connect(): ChatConnection {
         return chatRepo.connect()
+    }
+
+    override suspend fun sendMessage(chatId: String, authorId: String, messageText: String) {
+        chatRepo.sendMessage(chatId, authorId, messageText)
     }
 }

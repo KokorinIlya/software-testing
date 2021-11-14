@@ -3,16 +3,17 @@ package com.github.kokorinilya.springbackend.repo
 import com.github.jasync.sql.db.SuspendingConnection
 import com.github.kokorinilya.springbackend.config.ChatRepoConfig
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
-import com.github.kokorinilya.springbackend.exception.CreateNewChatException
+import com.github.kokorinilya.springbackend.exception.*
 import com.github.kokorinilya.springbackend.model.ChatConnection
 import com.github.kokorinilya.springbackend.model.ExistingChatConnection
 import com.github.kokorinilya.springbackend.model.NewChatConnection
 import com.github.kokorinilya.springbackend.utils.UUIDGenerator
 import org.springframework.stereotype.Component
-import java.util.*
 
 interface ChatRepo {
     suspend fun connect(): ChatConnection
+
+    suspend fun sendMessage(chatId: String, authorId: String, messageText: String)
 }
 
 @Component
@@ -39,6 +40,12 @@ RETURNING Chats.chat_id::TEXT, Chats.participant_a::TEXT;
         private val createNewChatQuery = """
 INSERT INTO Chats (chat_id, participant_a)
 VALUES (?::UUID, ?::UUID);
+        """.trimIndent()
+
+        private val getChatParticipantsQuery = """
+SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
+FROM Chats
+WHERE Chats.chat_id = ?::UUID;
         """.trimIndent()
     }
 
@@ -73,6 +80,29 @@ VALUES (?::UUID, ?::UUID);
                     userId = uid,
                     partnerId = partnerId
             )
+        }
+    }
+
+    override suspend fun sendMessage(chatId: String, authorId: String, messageText: String) {
+        connectionProvider.getConnection().inTransaction { transactionConn ->
+            val getChatResult = transactionConn.sendPreparedStatement(getChatParticipantsQuery, listOf(chatId))
+            val getChatRows = getChatResult.rows
+            assert(getChatRows.size in 0..1)
+            if (getChatRows.size == 0) {
+                throw NoSuchChatException()
+            }
+            val participantA = getChatRows[0].getString("participant_a")!!
+            val participantB = getChatRows[0].getString("participant_a")
+                    ?: throw NoSecondParticipantException()
+            val finished = getChatRows[0].getBoolean("finished")!!
+            if (participantA != authorId && participantB != authorId) {
+                throw CannotAccessChatException()
+            }
+            if (finished) {
+                throw FinishedChatException()
+            }
+
+            // TODO
         }
     }
 }
