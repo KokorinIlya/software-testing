@@ -1,14 +1,14 @@
 package com.github.kokorinilya.springbackend.model
 
-interface ChatConnection
+sealed class ChatConnection
 
 data class NewChatConnection(
         val newChatId: String,
         val userId: String
-) : ChatConnection
+) : ChatConnection()
 
 data class ExistingChatConnection(
         val existingChatId: String,
         val userId: String,
         val partnerId: String
-) : ChatConnection
+) : ChatConnection()

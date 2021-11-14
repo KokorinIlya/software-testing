@@ -6,6 +6,7 @@ import com.github.jasync.sql.db.RowData
 import com.github.jasync.sql.db.SuspendingConnection
 import com.github.kokorinilya.springbackend.config.ChatRepoConfig
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
+import com.github.kokorinilya.springbackend.exception.CreateNewChatException
 import com.github.kokorinilya.springbackend.model.ExistingChatConnection
 import com.github.kokorinilya.springbackend.model.NewChatConnection
 import com.github.kokorinilya.springbackend.utils.UUIDGenerator
@@ -72,7 +73,7 @@ VALUES (?::UUID, ?::UUID);
                 config = repoConfig,
                 uuidGenerator = mockedUUIDGenerator
         )
-        val result = repo.connect() as ExistingChatConnection
+        val result = repo.connect()
         assertEquals(
                 ExistingChatConnection(existingChatId = "chat#42", partnerId = "user#24", userId = "new_uuid"),
                 result
@@ -129,7 +130,7 @@ VALUES (?::UUID, ?::UUID);
                 config = repoConfig,
                 uuidGenerator = mockedUUIDGenerator
         )
-        val result = repo.connect() as NewChatConnection
+        val result = repo.connect()
         assertEquals(
                 NewChatConnection(newChatId = "new_chat_id", userId = "new_uuid"),
                 result
@@ -142,6 +143,128 @@ VALUES (?::UUID, ?::UUID);
         verify(mockedConnection, times(1))
                 .sendPreparedStatement(createNewChatQuery, listOf("new_chat_id", "new_uuid"))
         verify(mockedUUIDGenerator, times(2))
+                .genUUID()
+        verify(mockedConnectResultSet, atLeastOnce()).size
+        verifyNoMoreInteractions(
+                mockedConnectionProvider,
+                mockedConnection,
+                mockedConnectResultSet,
+                mockedUUIDGenerator,
+                mockedCreateResultSet
+        )
+    }
+
+    @Test
+    fun testUnsuccessfulCreateNewChat() = runBlocking {
+        val mockedConnectionProvider = mock(ConnectionProvider::class.java)
+        val mockedConnection = mock(SuspendingConnection::class.java)
+        val mockedConnectResultSet = mock(ResultSet::class.java)
+        val mockedCreateResultSet = mock(ResultSet::class.java)
+        val mockedUUIDGenerator = mock(UUIDGenerator::class.java)
+
+        `when`(mockedConnectionProvider.getConnection())
+                .thenReturn(mockedConnection)
+
+        `when`(mockedUUIDGenerator.genUUID())
+                .thenReturn("new_uuid")
+                .thenReturn("new_chat_id")
+
+        `when`(mockedConnection.sendPreparedStatement(connectToExistingChatQuery, listOf("new_uuid")))
+                .thenReturn(QueryResult(rowsAffected = 1, statusMessage = "OK", rows = mockedConnectResultSet))
+
+        `when`(mockedConnection.sendPreparedStatement(createNewChatQuery, listOf("new_chat_id", "new_uuid")))
+                .thenReturn(QueryResult(rowsAffected = 0, statusMessage = "OK", rows = mockedCreateResultSet))
+
+        `when`(mockedConnectResultSet.size)
+                .thenReturn(0)
+
+        val repoConfig = object : ChatRepoConfig {
+            override val maxRetries: Int = 1
+        }
+        val repo = ChatRepoImpl(
+                connectionProvider = mockedConnectionProvider,
+                config = repoConfig,
+                uuidGenerator = mockedUUIDGenerator
+        )
+
+        var failed = false
+        try {
+            repo.connect()
+        } catch (e: CreateNewChatException) {
+            failed = true
+        }
+        assertTrue(failed)
+
+        verify(mockedConnectionProvider, times(1))
+                .getConnection()
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(connectToExistingChatQuery, listOf("new_uuid"))
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(createNewChatQuery, listOf("new_chat_id", "new_uuid"))
+        verify(mockedUUIDGenerator, times(2))
+                .genUUID()
+        verify(mockedConnectResultSet, atLeastOnce()).size
+        verifyNoMoreInteractions(
+                mockedConnectionProvider,
+                mockedConnection,
+                mockedConnectResultSet,
+                mockedUUIDGenerator,
+                mockedCreateResultSet
+        )
+    }
+
+    @Test
+    fun testCreateNewChatAfterMultipleRetries() = runBlocking {
+        val mockedConnectionProvider = mock(ConnectionProvider::class.java)
+        val mockedConnection = mock(SuspendingConnection::class.java)
+        val mockedConnectResultSet = mock(ResultSet::class.java)
+        val mockedCreateResultSet = mock(ResultSet::class.java)
+        val mockedUUIDGenerator = mock(UUIDGenerator::class.java)
+
+        `when`(mockedConnectionProvider.getConnection())
+                .thenReturn(mockedConnection)
+
+        `when`(mockedUUIDGenerator.genUUID())
+                .thenReturn("new_uuid")
+                .thenReturn("new_chat_id")
+                .thenReturn("other_chat_id")
+
+        `when`(mockedConnection.sendPreparedStatement(connectToExistingChatQuery, listOf("new_uuid")))
+                .thenReturn(QueryResult(rowsAffected = 1, statusMessage = "OK", rows = mockedConnectResultSet))
+
+        `when`(mockedConnectResultSet.size)
+                .thenReturn(0)
+
+        `when`(mockedConnection.sendPreparedStatement(createNewChatQuery, listOf("new_chat_id", "new_uuid")))
+                .thenReturn(QueryResult(rowsAffected = 0, statusMessage = "OK", rows = mockedCreateResultSet))
+
+        `when`(mockedConnection.sendPreparedStatement(createNewChatQuery, listOf("other_chat_id", "new_uuid")))
+                .thenReturn(QueryResult(rowsAffected = 1, statusMessage = "OK", rows = mockedCreateResultSet))
+
+        val repoConfig = object : ChatRepoConfig {
+            override val maxRetries: Int = 2
+        }
+        val repo = ChatRepoImpl(
+                connectionProvider = mockedConnectionProvider,
+                config = repoConfig,
+                uuidGenerator = mockedUUIDGenerator
+        )
+
+        val result = repo.connect()
+        assertEquals(
+                NewChatConnection(newChatId = "other_chat_id", userId = "new_uuid"),
+                result
+        )
+
+        verify(mockedConnectionProvider, times(1))
+                .getConnection()
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(connectToExistingChatQuery, listOf("new_uuid"))
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(createNewChatQuery, listOf("new_chat_id", "new_uuid"))
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(createNewChatQuery, listOf("other_chat_id", "new_uuid"))
+        verify(mockedUUIDGenerator, times(3))
                 .genUUID()
         verify(mockedConnectResultSet, atLeastOnce()).size
         verifyNoMoreInteractions(
