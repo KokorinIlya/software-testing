@@ -3,6 +3,7 @@ package com.github.kokorinilya.springbackend.utils
 import com.github.jasync.sql.db.SuspendingConnection
 import com.github.jasync.sql.db.asSuspending
 import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
+import com.github.kokorinilya.springbackend.database.ConnectionProvider
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.containers.wait.strategy.WaitStrategy
@@ -30,7 +31,7 @@ class AndWaitStrategy(waitStrategies: List<WaitStrategy>,
     }
 }
 
-suspend fun getPostgresContainer(initScriptPath: Path): Pair<PostgreSQLContainer<*>, SuspendingConnection> {
+suspend fun getPostgresContainer(initScriptPath: Path): Pair<PostgreSQLContainer<*>, ConnectionProvider> {
     val container = PostgreSQLContainer<Nothing>("postgres:latest").apply {
         withDatabaseName("mock_db")
         withUsername("user")
@@ -70,7 +71,10 @@ suspend fun getPostgresContainer(initScriptPath: Path): Pair<PostgreSQLContainer
             }
         }
 
-        return Pair(container, conn)
+        val connectionProvider = object : ConnectionProvider {
+            override fun getConnection(): SuspendingConnection = conn
+        }
+        return Pair(container, connectionProvider)
     } catch (e: Throwable) {
         try {
             container.stop()
