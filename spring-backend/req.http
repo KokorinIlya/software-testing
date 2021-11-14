@@ -3,7 +3,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "login": "kek",
+  "login": "kok",
   "password": "zzz"
 }
 ###
@@ -13,8 +13,8 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "login": "kek",
-  "password": "zzz"
+  "login": "kok",
+  "password": "zza"
 }
 ###
 
