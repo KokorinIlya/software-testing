@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import ChatClient from "./utils/ChatClient";
 import ChatManager from "./utils/ChatManager";
 
-const chatClient = new ChatClient("localhost", 5000)
+const chatClient = new ChatClient("localhost", 8080)
 const chatManager = new ChatManager(chatClient)
 
 ReactDOM.render(

@@ -8,14 +8,15 @@ export default class ChatManager {
 
     async getChatData(chatId, userId) {
         const jsonData = await this.chatClient.getChatData(chatId, userId)
+        const chatData = jsonData.chat // TODO
         let messages = null
-        assert(jsonData.userAId === userId || jsonData.userBId === userId)
-        if (jsonData.userBId !== null) {
-            messages = jsonData.messages
+        assert(chatData.userAId === userId || chatData.userBId === userId)
+        if (chatData.userBId !== null) {
+            messages = chatData.messages
         }
         return {
             messages: messages,
-            finished: jsonData.finished
+            finished: chatData.finished
         }
     }
 

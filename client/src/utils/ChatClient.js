@@ -6,7 +6,10 @@ export default class ChatClient {
     async getChatData(chatId, userId) {
         const result = await fetch(
             `${this.baseString}/chat/${chatId}?userId=${userId}`, {
-                cache: "no-cache"
+                cache: "no-cache",
+                headers: {
+                    'Accept': 'application/json'
+                },
             }
         )
         return await result.json()
@@ -19,6 +22,7 @@ export default class ChatClient {
                 cache: "no-cache",
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(
@@ -39,6 +43,7 @@ export default class ChatClient {
                 cache: "no-cache",
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(

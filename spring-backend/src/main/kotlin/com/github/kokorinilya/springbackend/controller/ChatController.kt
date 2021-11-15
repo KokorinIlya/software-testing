@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*
 class ChatController(private val chatService: ChatService) {
     @PostMapping(
             value = ["/connect"],
-            consumes = ["application/json"],
             produces = ["application/json"]
     )
     suspend fun connect(): ChatConnection {
@@ -81,6 +80,7 @@ class ChatController(private val chatService: ChatService) {
                     chatId = chatId,
                     userId = userId
             )
+
             Pair(HttpStatus.OK, SuccessfulGetChatResult(chat))
         } catch (e: CannotAccessChatException) {
             Pair(
