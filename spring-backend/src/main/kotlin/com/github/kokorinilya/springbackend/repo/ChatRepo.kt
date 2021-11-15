@@ -14,6 +14,8 @@ interface ChatRepo {
     suspend fun sendMessage(chatId: String, authorId: String, messageText: String)
 
     suspend fun getChat(chatId: String, userId: String): Chat
+
+    suspend fun finishChat(chatId: String, userId: String)
 }
 
 @Component
@@ -42,12 +44,6 @@ INSERT INTO Chats (chat_id, participant_a)
 VALUES (?::UUID, ?::UUID);
         """.trimIndent()
 
-        private val getChatParticipantsQuery = """
-SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
-FROM Chats
-WHERE Chats.chat_id = ?::UUID;
-        """.trimIndent()
-
         private val insertNewMessageQuery = """
 INSERT INTO ChatMessages (chat_id, author_id, message_text)
 VALUES (?::UUID, ?::UUID, ?)
@@ -66,6 +62,14 @@ FROM ChatMessages
 WHERE ChatMessages.chat_id = ?::UUID
 ORDER BY ChatMessages.message_timestamp;
         """.trimIndent()
+
+        private val finishChatQuery = """
+UPDATE Chats
+SET finished = TRUE
+WHERE Chats.chat_id = ?::UUID;
+        """.trimIndent()
+
+        private data class DBFetchedChat(val userAId: String, val userBId: String?, val finished: Boolean)
     }
 
     private suspend fun createNewChat(uid: String, connection: SuspendingConnection): NewChatConnection {
@@ -119,22 +123,30 @@ ORDER BY ChatMessages.message_timestamp;
         throw MaxNumberOfRetriesExceededException(config.maxRetries)
     }
 
+    private suspend fun doGetChat(connection: SuspendingConnection,
+                                  chatId: String, userId: String): DBFetchedChat {
+        val getChatResult = connection.sendPreparedStatement(getChatQuery, listOf(chatId))
+        val getChatRows = getChatResult.rows
+        assert(getChatRows.size in 0..1)
+        if (getChatRows.size == 0) {
+            throw NoSuchChatException()
+        }
+        val participantA = getChatRows[0].getString("participant_a")!!
+        val participantB = getChatRows[0].getString("participant_b")
+        if (participantA != userId && participantB != userId) {
+            throw CannotAccessChatException()
+        }
+        val finished = getChatRows[0].getBoolean("finished")!!
+        return DBFetchedChat(userAId = participantA, userBId = participantB, finished = finished)
+    }
+
     override suspend fun sendMessage(chatId: String, authorId: String, messageText: String) {
         connectionProvider.getConnection().inTransaction { transactionConn -> // TODO: repeatable read
-            val getChatResult = transactionConn.sendPreparedStatement(getChatParticipantsQuery, listOf(chatId))
-            val getChatRows = getChatResult.rows
-            assert(getChatRows.size in 0..1)
-            if (getChatRows.size == 0) {
-                throw NoSuchChatException()
+            val chat = doGetChat(connection = transactionConn, chatId = chatId, userId = authorId)
+            if (chat.userBId == null) {
+                throw NoSecondParticipantException()
             }
-            val participantA = getChatRows[0].getString("participant_a")!!
-            val participantB = getChatRows[0].getString("participant_b")
-                    ?: throw NoSecondParticipantException()
-            val finished = getChatRows[0].getBoolean("finished")!!
-            if (participantA != authorId && participantB != authorId) {
-                throw CannotAccessChatException()
-            }
-            if (finished) {
+            if (chat.finished) {
                 throw FinishedChatException()
             }
 
@@ -150,20 +162,7 @@ ORDER BY ChatMessages.message_timestamp;
     override suspend fun getChat(chatId: String, userId: String): Chat {
         val connection = connectionProvider.getConnection()
 
-        @Suppress("DuplicatedCode")
-        val getChatResult = connection.sendPreparedStatement(getChatQuery, listOf(chatId))
-        val getChatRows = getChatResult.rows
-        assert(getChatRows.size in 0..1)
-        if (getChatRows.size == 0) {
-            throw NoSuchChatException()
-        }
-        val participantA = getChatRows[0].getString("participant_a")!!
-        val participantB = getChatRows[0].getString("participant_b")
-        if (participantA != userId &&
-                (participantB == null || participantB != userId)) {
-            throw CannotAccessChatException()
-        }
-        val finished = getChatRows[0].getBoolean("finished")!!
+        val chat = doGetChat(connection = connection, chatId = chatId, userId = userId)
 
         val getMessagesResult = connection.sendPreparedStatement(getChatMessagesQuery, listOf(chatId))
         val messages = getMessagesResult.rows.map {
@@ -171,6 +170,17 @@ ORDER BY ChatMessages.message_timestamp;
             val messageText = it.getString("message_text")!!
             Message(authorId = authorId, text = messageText)
         }
-        return Chat(userAId = participantA, userBId = participantB, finished = finished, messages = messages)
+        return Chat(userAId = chat.userAId, userBId = chat.userBId, finished = chat.finished, messages = messages)
+    }
+
+    override suspend fun finishChat(chatId: String, userId: String) {
+        val connection = connectionProvider.getConnection()
+
+        val chat = doGetChat(connection = connection, chatId = chatId, userId = userId)
+        if (chat.finished) {
+            throw FinishedChatException()
+        }
+
+        connection.sendPreparedStatement(finishChatQuery, listOf(chatId))
     }
 }

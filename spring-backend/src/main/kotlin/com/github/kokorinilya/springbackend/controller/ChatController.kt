@@ -101,4 +101,45 @@ class ChatController(private val chatService: ChatService) {
 
         return ResponseEntity.status(code).body(result)
     }
+
+    @PostMapping(
+            value = ["/close/{chatId}"],
+            consumes = ["application/json"],
+            produces = ["application/json"]
+    )
+    suspend fun finishChat(@PathVariable chatId: String,
+                           @RequestBody request: FinishChatRequest): ResponseEntity<ChatManipulationResult> {
+        val (code, result) = try {
+            chatService.finishChat(
+                    chatId = chatId,
+                    userId = request.userId
+            )
+            Pair(
+                    HttpStatus.OK,
+                    SuccessfulChatManipulationResult(status = "OK")
+            )
+        } catch (e: CannotAccessChatException) {
+            Pair(
+                    HttpStatus.FORBIDDEN,
+                    UnsuccessfulChatManipulationResult(error = "Cannot access chat $chatId")
+            )
+        } catch (e: FinishedChatException) {
+            Pair(
+                    HttpStatus.FORBIDDEN,
+                    UnsuccessfulChatManipulationResult(error = "Cannot finish already finished chat")
+            )
+        } catch (e: NoSuchChatException) {
+            Pair(
+                    HttpStatus.NOT_FOUND,
+                    UnsuccessfulChatManipulationResult(error = "Chat $chatId does not exist")
+            )
+        } catch (e: Exception) {
+            Pair(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    UnsuccessfulChatManipulationResult(error = "Internal error: $e")
+            )
+        }
+
+        return ResponseEntity.status(code).body(result)
+    }
 }
