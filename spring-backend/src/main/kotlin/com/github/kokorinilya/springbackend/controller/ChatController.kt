@@ -17,7 +17,7 @@ class ChatController(private val chatService: ChatService) {
             consumes = ["application/json"],
             produces = ["application/json"]
     )
-    suspend fun register(): ChatConnection {
+    suspend fun connect(): ChatConnection {
         return chatService.connect()
     }
 
@@ -85,17 +85,17 @@ class ChatController(private val chatService: ChatService) {
         } catch (e: CannotAccessChatException) {
             Pair(
                     HttpStatus.FORBIDDEN,
-                    UnSuccessfulGetChatResult(error = "Cannot access chat $chatId")
+                    UnsuccessfulGetChatResult(error = "Cannot access chat $chatId")
             )
         } catch (e: NoSuchChatException) {
             Pair(
                     HttpStatus.NOT_FOUND,
-                    UnSuccessfulGetChatResult(error = "Chat $chatId does not exist")
+                    UnsuccessfulGetChatResult(error = "Chat $chatId does not exist")
             )
         } catch (e: Exception) {
             Pair(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    UnSuccessfulGetChatResult(error = "Internal error: $e")
+                    UnsuccessfulGetChatResult(error = "Internal error: $e")
             )
         }
 

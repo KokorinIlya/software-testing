@@ -21,6 +21,10 @@ class UserControllerComponentTest {
         val result = userController.login(credentials)
         assertEquals(HttpStatus.OK, result.statusCode)
         assertEquals("OK", result.body)
+
+        verify(mockedUserService, times(1))
+                .login(credentials)
+        verifyNoMoreInteractions(mockedUserService)
     }
 
     @Test
@@ -35,6 +39,10 @@ class UserControllerComponentTest {
         val result = userController.login(credentials)
         assertEquals(HttpStatus.FORBIDDEN, result.statusCode)
         assertEquals("Incorrect login and/or password", result.body)
+
+        verify(mockedUserService, times(1))
+                .login(credentials)
+        verifyNoMoreInteractions(mockedUserService)
     }
 
     @Test
@@ -49,6 +57,10 @@ class UserControllerComponentTest {
         val result = userController.register(credentials)
         assertEquals(HttpStatus.OK, result.statusCode)
         assertEquals("OK", result.body)
+
+        verify(mockedUserService, times(1))
+                .register(credentials)
+        verifyNoMoreInteractions(mockedUserService)
     }
 
     @Test
@@ -63,5 +75,9 @@ class UserControllerComponentTest {
         val result = userController.register(credentials)
         assertEquals(HttpStatus.FORBIDDEN, result.statusCode)
         assertEquals("Wrong login", result.body)
+
+        verify(mockedUserService, times(1))
+                .register(credentials)
+        verifyNoMoreInteractions(mockedUserService)
     }
 }
