@@ -25,7 +25,7 @@ class ChatController(private val chatService: ChatService) {
     }
 
     @PostMapping(
-            value = ["/connect/{chatId}"],
+            value = ["/send/{chatId}"],
             consumes = ["application/json"],
             produces = ["application/json"]
     )

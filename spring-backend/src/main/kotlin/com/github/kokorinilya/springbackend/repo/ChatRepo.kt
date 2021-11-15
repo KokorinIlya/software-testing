@@ -47,6 +47,12 @@ SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
 FROM Chats
 WHERE Chats.chat_id = ?::UUID;
         """.trimIndent()
+
+        private val insertNewMessageQuery = """
+INSERT INTO ChatMessages (chat_id, author_id, message_text)
+VALUES (?::UUID, ?::UUID, ?)
+ON CONFLICT DO NOTHING;
+        """.trimIndent()
     }
 
     private suspend fun createNewChat(uid: String, connection: SuspendingConnection): NewChatConnection {
@@ -60,7 +66,7 @@ WHERE Chats.chat_id = ?::UUID;
                 continue
             }
         }
-        throw CreateNewChatException(config.maxRetries)
+        throw MaxNumberOfRetriesExceededException(config.maxRetries)
     }
 
     override suspend fun connect(): ChatConnection {
@@ -83,6 +89,23 @@ WHERE Chats.chat_id = ?::UUID;
         }
     }
 
+    private suspend fun doSendMessage(chatId: String, authorId: String, messageText: String,
+                                      transactionConn: SuspendingConnection) {
+        for (i in 1..config.maxRetries) {
+            val result = transactionConn.sendPreparedStatement(
+                    insertNewMessageQuery,
+                    listOf(chatId, authorId, messageText)
+            )
+            assert(result.rowsAffected in 0..1)
+            if (result.rowsAffected == 1L) {
+                return
+            } else {
+                continue
+            }
+        }
+        throw MaxNumberOfRetriesExceededException(config.maxRetries)
+    }
+
     override suspend fun sendMessage(chatId: String, authorId: String, messageText: String) {
         connectionProvider.getConnection().inTransaction { transactionConn ->
             val getChatResult = transactionConn.sendPreparedStatement(getChatParticipantsQuery, listOf(chatId))
@@ -92,7 +115,7 @@ WHERE Chats.chat_id = ?::UUID;
                 throw NoSuchChatException()
             }
             val participantA = getChatRows[0].getString("participant_a")!!
-            val participantB = getChatRows[0].getString("participant_a")
+            val participantB = getChatRows[0].getString("participant_b")
                     ?: throw NoSecondParticipantException()
             val finished = getChatRows[0].getBoolean("finished")!!
             if (participantA != authorId && participantB != authorId) {
@@ -102,7 +125,12 @@ WHERE Chats.chat_id = ?::UUID;
                 throw FinishedChatException()
             }
 
-            // TODO
+            doSendMessage(
+                    chatId = chatId,
+                    authorId = authorId,
+                    messageText = messageText,
+                    transactionConn = transactionConn
+            )
         }
     }
 }

@@ -6,6 +6,7 @@ Accept: application/json
   "login": "kok",
   "password": "zzz"
 }
+
 ###
 
 POST http://localhost:8080/login
@@ -16,13 +17,27 @@ Accept: application/json
   "login": "kok",
   "password": "zza"
 }
+
 ###
 
 POST http://localhost:8080/connect
 Content-Type: application/json
 Accept: application/json
+
+###
+
+POST http://localhost:8080/send/b6c0b490-39b9-4d9b-ba65-e933a1634753
+Content-Type: application/json
+Accept: application/json
+
+{
+  "userId": "1525f7eb-ed2d-4962-9019-b493d77c17b7",
+  "message": "hello you!"
+}
+
 ###
 
 GET http://localhost:8080/hello/myname
 Accept: text/plain
+
 ###

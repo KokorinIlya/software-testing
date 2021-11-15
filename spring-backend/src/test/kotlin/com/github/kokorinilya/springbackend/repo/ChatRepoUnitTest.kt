@@ -6,7 +6,7 @@ import com.github.jasync.sql.db.RowData
 import com.github.jasync.sql.db.SuspendingConnection
 import com.github.kokorinilya.springbackend.config.ChatRepoConfig
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
-import com.github.kokorinilya.springbackend.exception.CreateNewChatException
+import com.github.kokorinilya.springbackend.exception.MaxNumberOfRetriesExceededException
 import com.github.kokorinilya.springbackend.model.ExistingChatConnection
 import com.github.kokorinilya.springbackend.model.NewChatConnection
 import com.github.kokorinilya.springbackend.utils.UUIDGenerator
@@ -190,7 +190,7 @@ VALUES (?::UUID, ?::UUID);
         var failed = false
         try {
             repo.connect()
-        } catch (e: CreateNewChatException) {
+        } catch (e: MaxNumberOfRetriesExceededException) {
             failed = true
         }
         assertTrue(failed)
