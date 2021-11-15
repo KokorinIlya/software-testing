@@ -33,7 +33,7 @@ val mockedTransactionConn = mock(SuspendingConnection::class.java)
 `when`(mockedConnection.inTransaction<Unit>(any()))
     .thenAnswer { invocation ->
         val callback = invocation.getArgument(0) as suspend (SuspendingConnection) -> Unit
-        runBlocking { callback(mockedTransactionConn) }
+        return runBlocking { callback(mockedTransactionConn) }
     }
 ``` 
 но после этого тестирующий фреймворк просто сходит с ума, начинают падать другие тесты, при этом ошибки в 
