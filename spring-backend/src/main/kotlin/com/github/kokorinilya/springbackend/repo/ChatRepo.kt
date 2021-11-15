@@ -29,7 +29,7 @@ class ChatRepoImpl(
 WITH SingleParticipantChats AS (
     SELECT chat_id, participant_a
     FROM Chats
-    WHERE participant_b IS NULL
+    WHERE Chats.participant_b IS NULL AND Chats.finished = FALSE
     LIMIT 1 FOR UPDATE SKIP LOCKED
 )
 UPDATE Chats

@@ -7,7 +7,7 @@ async function startChat(page, isFirst) {
     const buttons = await page.$$('.menu-element')
     expect(await buttons[0].textContent()).toEqual('Начать чат')
     await buttons[0].click()
-    await delay(100)
+    await delay(1000)
     const header = await page.$$('.top-rectangle')
     expect(await header[0].textContent()).toEqual('Активный чат')
     const chatStatus = await page.$$('.empty-chat-box')
@@ -22,7 +22,7 @@ async function reload(page) {
     const buttons = await page.$$('.menu-element')
     expect(await buttons[buttons.length - 1].textContent()).toEqual('Обновить страницу')
     await buttons[buttons.length - 1].click()
-    await delay(100)
+    await delay(1000)
 }
 
 async function getMessages(page) {
@@ -45,14 +45,14 @@ async function sendMessage(page, message) {
     await input[0].fill(message)
     const sendButton = await page.$$('.send-button')
     await sendButton[0].click()
-    await delay(100)
+    await delay(1000)
 }
 
 async function closeChat(page) {
     const buttons = await page.$$('.menu-element')
     expect(await buttons[buttons.length - 2].textContent()).toEqual('Завершить чат')
     await buttons[buttons.length - 2].click()
-    await delay(100)
+    await delay(1000)
 }
 
 test.describe('Chat', () => {
@@ -255,7 +255,7 @@ test.describe('Chat', () => {
         expect(buttons.length).toBe(1)
         expect(await buttons[0].textContent()).toEqual('Вернуться в приложение')
         await buttons[0].click()
-        await delay(100)
+        await delay(1000)
         const title = await pages[0].$$('.top-rectangle')
         expect(await title[0].textContent()).toEqual('Очередное приложение с чатами')
     })

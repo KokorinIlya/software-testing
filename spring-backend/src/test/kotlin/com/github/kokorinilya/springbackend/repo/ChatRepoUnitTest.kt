@@ -14,14 +14,13 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.*
-import org.mockito.ArgumentMatchers.*
 
 class ChatRepoUnitTest {
     private val connectToExistingChatQuery = """
 WITH SingleParticipantChats AS (
     SELECT chat_id, participant_a
     FROM Chats
-    WHERE participant_b IS NULL
+    WHERE Chats.participant_b IS NULL AND Chats.finished = FALSE
     LIMIT 1 FOR UPDATE SKIP LOCKED
 )
 UPDATE Chats

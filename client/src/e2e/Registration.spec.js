@@ -12,7 +12,7 @@ async function submitCredentials(page, login, password) {
     await passwordInput.fill(password)
     const sendButton = await page.$$('.send-button')
     await sendButton[0].click()
-    await delay(100)
+    await delay(1000)
 }
 
 async function registerUser(page, newLogin, password) {
