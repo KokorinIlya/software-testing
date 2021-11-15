@@ -25,10 +25,12 @@ describe('retrieving chat content', () => {
         expect(statusCode).toBe(200)
         expect(getChatResult).toEqual(
             {
-                userAId: connectResult.userId,
-                userBId: null,
-                messages: [],
-                finished: false
+                chat: {
+                    userAId: connectResult.userId,
+                    userBId: null,
+                    messages: [],
+                    finished: false
+                }
             }
         )
     })
@@ -61,10 +63,12 @@ describe('retrieving chat content', () => {
             expect(curStatusCode).toBe(200)
             expect(curGetChatResult).toEqual(
                 {
-                    userAId: aId,
-                    userBId: bId,
-                    messages: [],
-                    finished: false
+                    chat: {
+                        userAId: aId,
+                        userBId: bId,
+                        messages: [],
+                        finished: false
+                    }
                 }
             )
         })

@@ -86,19 +86,21 @@ describe('sending messages to chats', () => {
             expect(curStatusCode).toBe(200)
             expect(curGetChatResult).toEqual(
                 {
-                    userAId: aId,
-                    userBId: bId,
-                    messages: [
-                        {
-                            authorId: aId,
-                            text: "Hello, b!"
-                        },
-                        {
-                            authorId: bId,
-                            text: "Hello, a!"
-                        }
-                    ],
-                    finished: false
+                    chat: {
+                        userAId: aId,
+                        userBId: bId,
+                        messages: [
+                            {
+                                authorId: aId,
+                                text: "Hello, b!"
+                            },
+                            {
+                                authorId: bId,
+                                text: "Hello, a!"
+                            }
+                        ],
+                        finished: false
+                    }
                 }
             )
         })

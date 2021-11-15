@@ -102,19 +102,21 @@ describe('users can finish chats', () => {
             expect(curStatusCode).toBe(200)
             expect(curGetChatResult).toEqual(
                 {
-                    userAId: aId,
-                    userBId: bId,
-                    messages: [
-                        {
-                            authorId: bId,
-                            text: "Hello, a!"
-                        },
-                        {
-                            authorId: aId,
-                            text: "Hello, b!"
-                        }
-                    ],
-                    finished: true
+                    chat: {
+                        userAId: aId,
+                        userBId: bId,
+                        messages: [
+                            {
+                                authorId: bId,
+                                text: "Hello, a!"
+                            },
+                            {
+                                authorId: aId,
+                                text: "Hello, b!"
+                            }
+                        ],
+                        finished: true
+                    }
                 }
             )
         })

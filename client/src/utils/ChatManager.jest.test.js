@@ -6,10 +6,12 @@ describe('ChatManager.getChatData', () => {
         const chatClient = {
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: null,
-                    messages: [],
-                    finished: false
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: null,
+                        messages: [],
+                        finished: false
+                    }
                 }
             })
         }
@@ -28,10 +30,12 @@ describe('ChatManager.getChatData', () => {
         const chatClient = {
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: "uid_43",
-                    messages: [],
-                    finished: false
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: "uid_43",
+                        messages: [],
+                        finished: false
+                    }
                 }
             })
         }
@@ -50,10 +54,12 @@ describe('ChatManager.getChatData', () => {
         const chatClient = {
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: "uid_43",
-                    messages: ["msg_1", "msg_2"],
-                    finished: false
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: "uid_43",
+                        messages: ["msg_1", "msg_2"],
+                        finished: false
+                    }
                 }
             })
         }
@@ -72,10 +78,12 @@ describe('ChatManager.getChatData', () => {
         const chatClient = {
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: null,
-                    messages: [],
-                    finished: true
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: null,
+                        messages: [],
+                        finished: true
+                    }
                 }
             })
         }
@@ -94,10 +102,12 @@ describe('ChatManager.getChatData', () => {
         const chatClient = {
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: "uid_43",
-                    messages: [],
-                    finished: true
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: "uid_43",
+                        messages: [],
+                        finished: true
+                    }
                 }
             })
         }
@@ -116,10 +126,12 @@ describe('ChatManager.getChatData', () => {
         const chatClient = {
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: "uid_43",
-                    messages: ["msg_1", "msg_2"],
-                    finished: true
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: "uid_43",
+                        messages: ["msg_1", "msg_2"],
+                        finished: true
+                    }
                 }
             })
         }
@@ -147,10 +159,12 @@ describe('ChatManager.sendMessage', () => {
             sendMessage: jest.fn(),
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: "uid_43",
-                    messages: expectedMessages,
-                    finished: false
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: "uid_43",
+                        messages: expectedMessages,
+                        finished: false
+                    }
                 }
             })
         }
@@ -175,10 +189,12 @@ describe('ChatManager.closeChat', () => {
             closeChat: jest.fn(),
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: "uid_43",
-                    messages: [],
-                    finished: true
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: "uid_43",
+                        messages: [],
+                        finished: true
+                    }
                 }
             })
         }
@@ -208,10 +224,12 @@ describe('ChatManager.startChat', () => {
             }),
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: null,
-                    messages: [],
-                    finished: false
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: null,
+                        messages: [],
+                        finished: false
+                    }
                 }
             })
         }
@@ -240,10 +258,12 @@ describe('ChatManager.startChat', () => {
             }),
             getChatData: jest.fn(() => {
                 return {
-                    userAId: "uid_42",
-                    userBId: 'uid_43',
-                    messages: [],
-                    finished: false
+                    chat: {
+                        userAId: "uid_42",
+                        userBId: 'uid_43',
+                        messages: [],
+                        finished: false
+                    }
                 }
             })
         }

@@ -16,10 +16,12 @@ describe('ChatManager.getChatData', () => {
         await delay(200)
         const chatClient = {
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: null,
-                messages: [],
-                finished: false
+                chat: {
+                    userAId: "uid_42",
+                    userBId: null,
+                    messages: [],
+                    finished: false
+                }
             })
         }
 
@@ -36,10 +38,12 @@ describe('ChatManager.getChatData', () => {
     it('returns chat with both participants and no messages', async () => {
         const chatClient = {
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: "uid_43",
-                messages: [],
-                finished: false
+                chat: {
+                    userAId: "uid_42",
+                    userBId: "uid_43",
+                    messages: [],
+                    finished: false
+                }
             })
         }
 
@@ -56,10 +60,12 @@ describe('ChatManager.getChatData', () => {
     it('returns chat with both participants and one or more messages', async () => {
         const chatClient = {
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: "uid_43",
-                messages: ["msg_1", "msg_2"],
-                finished: false
+                chat: {
+                    userAId: "uid_42",
+                    userBId: "uid_43",
+                    messages: ["msg_1", "msg_2"],
+                    finished: false
+                }
             })
         }
 
@@ -76,10 +82,12 @@ describe('ChatManager.getChatData', () => {
     it('returns finished chat with single participant', async () => {
         const chatClient = {
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: null,
-                messages: [],
-                finished: true
+                chat: {
+                    userAId: "uid_42",
+                    userBId: null,
+                    messages: [],
+                    finished: true
+                }
             })
         }
 
@@ -96,10 +104,12 @@ describe('ChatManager.getChatData', () => {
     it('returns finished chat with both participants and no messages', async () => {
         const chatClient = {
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: "uid_43",
-                messages: [],
-                finished: true
+                chat: {
+                    userAId: "uid_42",
+                    userBId: "uid_43",
+                    messages: [],
+                    finished: true
+                }
             })
         }
 
@@ -116,10 +126,12 @@ describe('ChatManager.getChatData', () => {
     it('returns finished chat with both participants and one or more messages', async () => {
         const chatClient = {
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: "uid_43",
-                messages: ["msg_1", "msg_2"],
-                finished: true
+                chat: {
+                    userAId: "uid_42",
+                    userBId: "uid_43",
+                    messages: ["msg_1", "msg_2"],
+                    finished: true
+                }
             })
         }
 
@@ -145,10 +157,12 @@ describe('ChatManager.sendMessage', () => {
         const chatClient = {
             sendMessage: sinon.fake(),
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: "uid_43",
-                messages: expectedMessages,
-                finished: false
+                chat: {
+                    userAId: "uid_42",
+                    userBId: "uid_43",
+                    messages: expectedMessages,
+                    finished: false
+                }
             })
         }
 
@@ -171,10 +185,12 @@ describe('ChatManager.closeChat', () => {
         const chatClient = {
             closeChat: sinon.fake(),
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: "uid_43",
-                messages: [],
-                finished: true
+                chat: {
+                    userAId: "uid_42",
+                    userBId: "uid_43",
+                    messages: [],
+                    finished: true
+                }
             })
         }
 
@@ -199,10 +215,12 @@ describe('ChatManager.startChat', () => {
                 userId: 'uid_42'
             }),
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: null,
-                messages: [],
-                finished: false
+                chat: {
+                    userAId: "uid_42",
+                    userBId: null,
+                    messages: [],
+                    finished: false
+                }
             })
         }
         const chatManager = new ChatManager(chatClient)
@@ -226,10 +244,12 @@ describe('ChatManager.startChat', () => {
                 userId: 'uid_43'
             }),
             getChatData: sinon.fake.returns({
-                userAId: "uid_42",
-                userBId: 'uid_43',
-                messages: [],
-                finished: false
+                chat: {
+                    userAId: "uid_42",
+                    userBId: 'uid_43',
+                    messages: [],
+                    finished: false
+                }
             })
         }
         const chatManager = new ChatManager(chatClient)

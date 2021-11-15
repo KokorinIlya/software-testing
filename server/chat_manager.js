@@ -45,7 +45,10 @@ function checkChatAccess(serverState, chatId, userId) {
     if (chat !== undefined) {
         assert(chat.userAId !== null)
         if (chat.userAId === userId || chat.userBId === userId) {
-            return [chat, 200]
+            const result = {
+                chat: chat
+            }
+            return [result, 200]
         } else {
             const result = {
                 error: "You don't have permission to access this chat"
@@ -69,13 +72,14 @@ function sendMessage(serverState, chatId, userId, message) {
     if (code !== 200) {
         return [maybeChat, code]
     }
-    if (maybeChat.finished) {
+    const chat = maybeChat.chat
+    if (chat.finished) {
         const result = {
             error: 'Cannot send messages to the finished chat'
         }
         return [result, 400]
     }
-    if (maybeChat.userBId === null) {
+    if (chat.userBId === null) {
         const result = {
             error: 'Cannot send messages to the chat without the second participant'
         }
@@ -86,7 +90,7 @@ function sendMessage(serverState, chatId, userId, message) {
         authorId: userId,
         text: message
     }
-    maybeChat.messages.push(newMessage)
+    chat.messages.push(newMessage)
     const result = {
         status: 'OK'
     }
@@ -98,15 +102,16 @@ function finishChat(serverState, chatId, userId) {
     if (code !== 200) {
         return [maybeChat, code]
     }
-    if (maybeChat.finished) {
+    const chat = maybeChat.chat
+    if (chat.finished) {
         const result = {
             error: 'Cannot finish already finished chat'
         }
         return [result, 400]
     }
-    maybeChat.finished = true
+    chat.finished = true
     if (chatId === serverState.pendingRequestId) {
-        assert(maybeChat.userBId === null)
+        assert(chat.userBId === null)
         serverState.pendingRequestId = null
     }
     const result = {
