@@ -33,3 +33,7 @@ CREATE TABLE ChatMessages
 
     PRIMARY KEY (chat_id, message_timestamp)
 );
+
+--- CMD
+
+CREATE UNIQUE INDEX ON ChatMessages USING btree (chat_id, message_timestamp);

@@ -4,9 +4,7 @@ import com.github.jasync.sql.db.SuspendingConnection
 import com.github.kokorinilya.springbackend.config.ChatRepoConfig
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
 import com.github.kokorinilya.springbackend.exception.*
-import com.github.kokorinilya.springbackend.model.ChatConnection
-import com.github.kokorinilya.springbackend.model.ExistingChatConnection
-import com.github.kokorinilya.springbackend.model.NewChatConnection
+import com.github.kokorinilya.springbackend.model.*
 import com.github.kokorinilya.springbackend.utils.UUIDGenerator
 import org.springframework.stereotype.Component
 
@@ -14,6 +12,8 @@ interface ChatRepo {
     suspend fun connect(): ChatConnection
 
     suspend fun sendMessage(chatId: String, authorId: String, messageText: String)
+
+    suspend fun getChat(chatId: String, userId: String): Chat
 }
 
 @Component
@@ -52,6 +52,19 @@ WHERE Chats.chat_id = ?::UUID;
 INSERT INTO ChatMessages (chat_id, author_id, message_text)
 VALUES (?::UUID, ?::UUID, ?)
 ON CONFLICT DO NOTHING;
+        """.trimIndent()
+
+        private val getChatQuery = """
+SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
+FROM Chats
+WHERE Chats.chat_id = ?::UUID;
+        """.trimIndent()
+
+        private val getChatMessagesQuery = """
+SELECT ChatMessages.author_id::TEXT, ChatMessages.message_text
+FROM ChatMessages
+WHERE ChatMessages.chat_id = ?::UUID
+ORDER BY ChatMessages.message_timestamp;
         """.trimIndent()
     }
 
@@ -107,7 +120,7 @@ ON CONFLICT DO NOTHING;
     }
 
     override suspend fun sendMessage(chatId: String, authorId: String, messageText: String) {
-        connectionProvider.getConnection().inTransaction { transactionConn ->
+        connectionProvider.getConnection().inTransaction { transactionConn -> // TODO: repeatable read
             val getChatResult = transactionConn.sendPreparedStatement(getChatParticipantsQuery, listOf(chatId))
             val getChatRows = getChatResult.rows
             assert(getChatRows.size in 0..1)
@@ -132,5 +145,32 @@ ON CONFLICT DO NOTHING;
                     transactionConn = transactionConn
             )
         }
+    }
+
+    override suspend fun getChat(chatId: String, userId: String): Chat {
+        val connection = connectionProvider.getConnection()
+
+        @Suppress("DuplicatedCode")
+        val getChatResult = connection.sendPreparedStatement(getChatQuery, listOf(chatId))
+        val getChatRows = getChatResult.rows
+        assert(getChatRows.size in 0..1)
+        if (getChatRows.size == 0) {
+            throw NoSuchChatException()
+        }
+        val participantA = getChatRows[0].getString("participant_a")!!
+        val participantB = getChatRows[0].getString("participant_b")
+        if (participantA != userId &&
+                (participantB == null || participantB != userId)) {
+            throw CannotAccessChatException()
+        }
+        val finished = getChatRows[0].getBoolean("finished")!!
+
+        val getMessagesResult = connection.sendPreparedStatement(getChatMessagesQuery, listOf(chatId))
+        val messages = getMessagesResult.rows.map {
+            val authorId = it.getString("author_id")!!
+            val messageText = it.getString("message_text")!!
+            Message(authorId = authorId, text = messageText)
+        }
+        return Chat(userAId = participantA, userBId = participantB, finished = finished, messages = messages)
     }
 }

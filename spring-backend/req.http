@@ -37,6 +37,11 @@ Accept: application/json
 
 ###
 
+GET http://localhost:8080/chat/b6c0b490-39b9-4d9b-ba65-e933a1634753?userId=1525f7eb-ed2d-4962-9019-b493d77c17b7
+Accept: application/json
+
+###
+
 GET http://localhost:8080/hello/myname
 Accept: text/plain
 
