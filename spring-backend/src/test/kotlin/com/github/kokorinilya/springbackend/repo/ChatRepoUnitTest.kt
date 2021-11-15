@@ -14,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.*
+import org.mockito.ArgumentMatchers.*
 
 class ChatRepoUnitTest {
     private val connectToExistingChatQuery = """
@@ -34,6 +35,12 @@ RETURNING Chats.chat_id::TEXT, Chats.participant_a::TEXT;
     private val createNewChatQuery = """
 INSERT INTO Chats (chat_id, participant_a)
 VALUES (?::UUID, ?::UUID);
+        """.trimIndent()
+
+    private val getChatQuery = """
+SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
+FROM Chats
+WHERE Chats.chat_id = ?::UUID;
         """.trimIndent()
 
     @Test
