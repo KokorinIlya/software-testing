@@ -6,47 +6,26 @@ import com.github.jasync.sql.db.postgresql.PostgreSQLConnectionBuilder
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy
 import org.testcontainers.containers.wait.strategy.WaitStrategy
 import org.testcontainers.containers.wait.strategy.WaitStrategyTarget
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 
-class AndWaitStrategy(waitStrategies: List<WaitStrategy>,
-                      private val startupTimeout: Duration? = null) : WaitStrategy {
-    private val timedWaitingStrategies = if (startupTimeout != null) {
-        waitStrategies.map { it.withStartupTimeout(startupTimeout) }
-    } else {
-        waitStrategies
-    }
-
-    override fun waitUntilReady(waitStrategyTarget: WaitStrategyTarget?) {
-        for (curWaitStrategy in timedWaitingStrategies) {
-            curWaitStrategy.waitUntilReady(waitStrategyTarget)
-        }
-    }
-
-    override fun withStartupTimeout(newStartupTimeout: Duration?): WaitStrategy {
-        return AndWaitStrategy(timedWaitingStrategies, newStartupTimeout)
-    }
-}
-
 suspend fun getPostgresContainer(initScriptPath: Path): Pair<PostgreSQLContainer<*>, ConnectionProvider> {
+    val strategy = WaitAllStrategy(WaitAllStrategy.Mode.WITH_OUTER_TIMEOUT)
+            .withStrategy(
+                    Wait.forLogMessage(".*database system is ready to accept connections.*", 1)
+            )
+            .withStrategy(Wait.forListeningPort())
+            .withStartupTimeout(Duration.ofMinutes(1))
     val container = PostgreSQLContainer<Nothing>("postgres:latest").apply {
         withDatabaseName("mock_db")
         withUsername("user")
         withPassword("password")
         withExposedPorts(5432)
-        waitingFor(
-                AndWaitStrategy(
-                        listOf(
-                                Wait.forLogMessage(
-                                        ".*database system is ready to accept connections.*", 1
-                                ),
-                                Wait.forListeningPort()
-                        )
-                )
-        )
+        waitingFor(strategy)
     }
     container.start()
 

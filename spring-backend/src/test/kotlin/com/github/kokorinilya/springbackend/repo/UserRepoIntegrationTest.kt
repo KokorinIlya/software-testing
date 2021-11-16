@@ -1,6 +1,7 @@
 package com.github.kokorinilya.springbackend.repo
 
 import com.github.kokorinilya.springbackend.model.Credentials
+import com.github.kokorinilya.springbackend.utils.assertThrowsSuspend
 import com.github.kokorinilya.springbackend.utils.getPostgresContainer
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -80,13 +81,9 @@ class UserRepoIntegrationTest {
             val repo = UserRepoImpl(connectionProvider)
             container.stop()
 
-            var failed = false
-            try { // Cannot use assertThrows here because of suspend behaviour
+            assertThrowsSuspend(Exception::class.java) {
                 repo.action(Credentials("login", "password"))
-            } catch (e: Exception) {
-                failed = true
             }
-            assertTrue(failed)
         }
     }
 
