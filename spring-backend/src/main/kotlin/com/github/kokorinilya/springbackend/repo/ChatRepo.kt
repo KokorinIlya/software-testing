@@ -69,6 +69,10 @@ SET finished = TRUE
 WHERE Chats.chat_id = ?::UUID;
         """.trimIndent()
 
+        private val repeatableReadQuery = """
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+        """.trimIndent()
+
         private data class DBFetchedChat(val userAId: String, val userBId: String?, val finished: Boolean)
     }
 
@@ -141,7 +145,9 @@ WHERE Chats.chat_id = ?::UUID;
     }
 
     override suspend fun sendMessage(chatId: String, authorId: String, messageText: String) {
-        connectionProvider.getConnection().inTransaction { transactionConn -> // TODO: repeatable read
+        connectionProvider.getConnection().inTransaction { transactionConn ->
+            transactionConn.sendQuery(repeatableReadQuery)
+
             val chat = doGetChat(connection = transactionConn, chatId = chatId, userId = authorId)
             if (chat.userBId == null) {
                 throw NoSecondParticipantException()
