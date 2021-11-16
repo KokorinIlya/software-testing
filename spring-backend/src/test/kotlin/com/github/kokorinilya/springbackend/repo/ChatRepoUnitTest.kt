@@ -6,42 +6,22 @@ import com.github.jasync.sql.db.RowData
 import com.github.jasync.sql.db.SuspendingConnection
 import com.github.kokorinilya.springbackend.config.ChatRepoConfig
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
+import com.github.kokorinilya.springbackend.exception.CannotAccessChatException
 import com.github.kokorinilya.springbackend.exception.MaxNumberOfRetriesExceededException
+import com.github.kokorinilya.springbackend.exception.NoSuchChatException
 import com.github.kokorinilya.springbackend.model.ExistingChatConnection
 import com.github.kokorinilya.springbackend.model.NewChatConnection
+import com.github.kokorinilya.springbackend.repo.ChatRepoImpl.Companion.connectToExistingChatQuery
+import com.github.kokorinilya.springbackend.repo.ChatRepoImpl.Companion.createNewChatQuery
+import com.github.kokorinilya.springbackend.repo.ChatRepoImpl.Companion.getChatQuery
 import com.github.kokorinilya.springbackend.utils.UUIDGenerator
+import com.github.kokorinilya.springbackend.utils.assertThrowsSuspend
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.mockito.Mockito.*
 
 class ChatRepoUnitTest {
-    private val connectToExistingChatQuery = """
-WITH SingleParticipantChats AS (
-    SELECT chat_id, participant_a
-    FROM Chats
-    WHERE Chats.participant_b IS NULL AND Chats.finished = FALSE
-    LIMIT 1 FOR UPDATE SKIP LOCKED
-)
-UPDATE Chats
-SET participant_b = ?::UUID
-FROM SingleParticipantChats
-WHERE SingleParticipantChats.chat_id = Chats.chat_id
-RETURNING Chats.chat_id::TEXT, Chats.participant_a::TEXT;
-        """.trimIndent()
-
-
-    private val createNewChatQuery = """
-INSERT INTO Chats (chat_id, participant_a)
-VALUES (?::UUID, ?::UUID);
-        """.trimIndent()
-
-    private val getChatQuery = """
-SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
-FROM Chats
-WHERE Chats.chat_id = ?::UUID;
-        """.trimIndent()
-
     @Test
     fun testConnectToExistingChat() = runBlocking {
         val mockedConnectionProvider = mock(ConnectionProvider::class.java)
@@ -280,5 +260,112 @@ WHERE Chats.chat_id = ?::UUID;
                 mockedUUIDGenerator,
                 mockedCreateResultSet
         )
+    }
+
+    @Test
+    fun testGetNonExistingChat() = runBlocking {
+        val mockedConnectionProvider = mock(ConnectionProvider::class.java)
+        val mockedConnection = mock(SuspendingConnection::class.java)
+        val mockedResultSet = mock(ResultSet::class.java)
+        val mockedUUIDGenerator = mock(UUIDGenerator::class.java)
+
+        `when`(mockedConnectionProvider.getConnection())
+                .thenReturn(mockedConnection)
+
+        `when`(mockedConnection.sendPreparedStatement(getChatQuery, listOf("chat_id")))
+                .thenReturn(QueryResult(rowsAffected = 0, statusMessage = "OK", rows = mockedResultSet))
+
+        `when`(mockedResultSet.size)
+                .thenReturn(0)
+
+        val repoConfig = object : ChatRepoConfig {
+            override val maxRetries: Int = 1
+        }
+        val repo = ChatRepoImpl(
+                connectionProvider = mockedConnectionProvider,
+                config = repoConfig,
+                uuidGenerator = mockedUUIDGenerator
+        )
+
+        assertThrowsSuspend(NoSuchChatException::class.java) {
+            repo.getChat("chat_id", "user_id")
+        }
+
+        verify(mockedConnectionProvider, times(1))
+                .getConnection()
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(getChatQuery, listOf("chat_id"))
+        verify(mockedResultSet, atLeastOnce()).size
+        verifyNoMoreInteractions(
+                mockedConnectionProvider,
+                mockedConnection,
+                mockedResultSet,
+                mockedUUIDGenerator
+        )
+    }
+
+    private fun testGetNonAccessible(bIdIsNull: Boolean) = runBlocking {
+        val mockedConnectionProvider = mock(ConnectionProvider::class.java)
+        val mockedConnection = mock(SuspendingConnection::class.java)
+        val mockedResultSet = mock(ResultSet::class.java)
+        val mockedRowData = mock(RowData::class.java)
+        val mockedUUIDGenerator = mock(UUIDGenerator::class.java)
+
+        `when`(mockedConnectionProvider.getConnection())
+                .thenReturn(mockedConnection)
+
+        `when`(mockedConnection.sendPreparedStatement(getChatQuery, listOf("chat_id")))
+                .thenReturn(QueryResult(rowsAffected = 0, statusMessage = "OK", rows = mockedResultSet))
+
+        `when`(mockedResultSet.size)
+                .thenReturn(1)
+
+        `when`(mockedResultSet[0])
+                .thenReturn(mockedRowData)
+
+        `when`(mockedRowData.getString("participant_a"))
+                .thenReturn("a_id")
+
+        `when`(mockedRowData.getString("participant_b"))
+                .thenReturn(if (bIdIsNull) "b_id" else null)
+
+        val repoConfig = object : ChatRepoConfig {
+            override val maxRetries: Int = 1
+        }
+        val repo = ChatRepoImpl(
+                connectionProvider = mockedConnectionProvider,
+                config = repoConfig,
+                uuidGenerator = mockedUUIDGenerator
+        )
+
+        assertThrowsSuspend(CannotAccessChatException::class.java) {
+            repo.getChat("chat_id", "user_id")
+        }
+
+        verify(mockedConnectionProvider, times(1))
+                .getConnection()
+        verify(mockedConnection, times(1))
+                .sendPreparedStatement(getChatQuery, listOf("chat_id"))
+        verify(mockedResultSet, atLeastOnce()).size
+        verify(mockedResultSet, atLeastOnce())[0]
+        verify(mockedRowData, times(1)).getString("participant_a")
+        verify(mockedRowData, times(1)).getString("participant_b")
+        verifyNoMoreInteractions(
+                mockedConnectionProvider,
+                mockedConnection,
+                mockedResultSet,
+                mockedUUIDGenerator,
+                mockedRowData
+        )
+    }
+
+    @Test
+    fun testGetNonAccessibleBothParticipants() {
+        testGetNonAccessible(bIdIsNull = true)
+    }
+
+    @Test
+    fun testGetNonAccessibleSingleParticipant() {
+        testGetNonAccessible(bIdIsNull = false)
     }
 }

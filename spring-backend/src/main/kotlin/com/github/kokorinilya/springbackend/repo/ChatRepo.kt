@@ -25,7 +25,7 @@ class ChatRepoImpl(
         private val uuidGenerator: UUIDGenerator
 ) : ChatRepo {
     companion object {
-        private val connectToExistingChatQuery = """
+        internal val connectToExistingChatQuery = """
 WITH SingleParticipantChats AS (
     SELECT chat_id, participant_a
     FROM Chats
@@ -39,37 +39,37 @@ WHERE SingleParticipantChats.chat_id = Chats.chat_id
 RETURNING Chats.chat_id::TEXT, Chats.participant_a::TEXT;
         """.trimIndent()
 
-        private val createNewChatQuery = """
+        internal val createNewChatQuery = """
 INSERT INTO Chats (chat_id, participant_a)
 VALUES (?::UUID, ?::UUID);
         """.trimIndent()
 
-        private val insertNewMessageQuery = """
+        internal val insertNewMessageQuery = """
 INSERT INTO ChatMessages (chat_id, author_id, message_text)
 VALUES (?::UUID, ?::UUID, ?)
 ON CONFLICT DO NOTHING;
         """.trimIndent()
 
-        private val getChatQuery = """
+        internal val getChatQuery = """
 SELECT Chats.participant_a::TEXT, Chats.participant_b::TEXT, Chats.finished
 FROM Chats
 WHERE Chats.chat_id = ?::UUID;
         """.trimIndent()
 
-        private val getChatMessagesQuery = """
+        internal val getChatMessagesQuery = """
 SELECT ChatMessages.author_id::TEXT, ChatMessages.message_text
 FROM ChatMessages
 WHERE ChatMessages.chat_id = ?::UUID
 ORDER BY ChatMessages.message_timestamp;
         """.trimIndent()
 
-        private val finishChatQuery = """
+        internal val finishChatQuery = """
 UPDATE Chats
 SET finished = TRUE
 WHERE Chats.chat_id = ?::UUID;
         """.trimIndent()
 
-        private val repeatableReadQuery = """
+        internal val repeatableReadQuery = """
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
         """.trimIndent()
 
