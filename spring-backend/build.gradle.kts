@@ -18,6 +18,7 @@ repositories {
 val coroutinesVersion = "1.5.2"
 
 dependencies {
+    implementation("org.apache.kafka:kafka-clients:3.0.0")
     implementation("com.github.jasync-sql:jasync-postgresql:2.0.0")
     //implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.springframework.boot:spring-boot-starter-web")

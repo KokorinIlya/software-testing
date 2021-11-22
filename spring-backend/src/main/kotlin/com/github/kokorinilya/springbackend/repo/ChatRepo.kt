@@ -4,6 +4,7 @@ import com.github.jasync.sql.db.SuspendingConnection
 import com.github.kokorinilya.springbackend.config.ChatRepoConfig
 import com.github.kokorinilya.springbackend.database.ConnectionProvider
 import com.github.kokorinilya.springbackend.exception.*
+import com.github.kokorinilya.springbackend.kafka.ChatProducer
 import com.github.kokorinilya.springbackend.model.*
 import com.github.kokorinilya.springbackend.utils.UUIDGenerator
 import org.springframework.stereotype.Component
@@ -22,7 +23,8 @@ interface ChatRepo {
 class ChatRepoImpl(
         private val connectionProvider: ConnectionProvider,
         private val config: ChatRepoConfig,
-        private val uuidGenerator: UUIDGenerator
+        private val uuidGenerator: UUIDGenerator,
+        private val chatProducer: ChatProducer
 ) : ChatRepo {
     companion object {
         internal val connectToExistingChatQuery = """
@@ -182,11 +184,12 @@ SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
     override suspend fun finishChat(chatId: String, userId: String) {
         val connection = connectionProvider.getConnection()
 
-        val chat = doGetChat(connection = connection, chatId = chatId, userId = userId)
+        val chat = getChat(chatId = chatId, userId = userId)
         if (chat.finished) {
             throw FinishedChatException()
         }
 
         connection.sendPreparedStatement(finishChatQuery, listOf(chatId))
+        chatProducer.sendChat(chatId = chatId, chat = chat)
     }
 }

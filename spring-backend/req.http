@@ -26,28 +26,28 @@ Accept: application/json
 
 ###
 
-POST http://localhost:8080/send/b6c0b490-39b9-4d9b-ba65-e933a1634753
+POST http://localhost:8080/send/da322e25-1c9d-493c-81f6-7951521f515f
 Content-Type: application/json
 Accept: application/json
 
 {
-  "userId": "1525f7eb-ed2d-4962-9019-b493d77c17b7",
+  "userId": "72ca52dc-7ec5-4e67-ae1b-a266b1548031",
   "message": "hello you!"
 }
 
 ###
 
-GET http://localhost:8080/chat/b6c0b490-39b9-4d9b-ba65-e933a1634753?userId=4b3d7a1d-4b40-4bf6-b8e7-2e3813622acc
+GET http://localhost:8080/chat/54d781a8-6fe5-4f5e-a142-b65894d288ef?userId=6e551275-0977-4208-a63c-b925cc45b82b
 Accept: application/json
 
 ###
 
-POST http://localhost:8080/close/b6c0b490-39b9-4d9b-ba65-e933a1634753
+POST http://localhost:8080/close/da322e25-1c9d-493c-81f6-7951521f515f
 Content-Type: application/json
 Accept: application/json
 
 {
-  "userId": "1525f7eb-ed2d-4962-9019-b493d77c17b7"
+  "userId": "72ca52dc-7ec5-4e67-ae1b-a266b1548031"
 }
 
 ###
